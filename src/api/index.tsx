@@ -39,14 +39,14 @@ const getArtworksApi = (page = 1, limit = 15) => {
     .catch(e => console.log('error at getArtworksApi', e));
 };
 
-const getArtworkDetailsApi = (page = 1, limit = 15, artworkID: string) => {
+const getArtworkDetailsApi = (artworkID: string, page = 1, limit = 15) => {
   return client
     .get(`/artworks/${artworkID}`, { params: { page, limit } })
     .then(response => response.data)
     .catch(e => console.log('error at getArtworkDetailsApi', e));
 };
 
-const getArtworksBySearchApi = (page = 1, limit = 15, search: string) => {
+const getArtworksBySearchApi = (search: string, page = 1, limit = 15) => {
   return client
     .get('/artworks/search', { params: { page, limit, q: search } })
     .then(response => response.data)

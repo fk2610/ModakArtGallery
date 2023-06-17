@@ -10,8 +10,16 @@ const Stack = createNativeStackNavigator();
 const MainNavigator = () => {
   return (
     <Stack.Navigator>
-      <Stack.Screen name={HOME_ROUTE} component={HomeScreen} />
-      <Stack.Screen name={HOME_DETAIL_ROUTE} component={ArtworkDetailScreen} />
+      <Stack.Screen
+        name={HOME_ROUTE}
+        options={{ title: 'Art Institute of Chicago' }}
+        component={HomeScreen}
+      />
+      <Stack.Screen
+        name={HOME_DETAIL_ROUTE}
+        options={{ title: 'My home' }}
+        component={ArtworkDetailScreen}
+      />
     </Stack.Navigator>
   );
 };

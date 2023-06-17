@@ -1,97 +1,121 @@
-import React from 'react';
-import type { PropsWithChildren } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
+  ActivityIndicator,
+  FlatList,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
 } from 'react-native';
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+import ArtworkItem from '../components/ArtworkItem';
+import { getArtworksApi } from '../api';
+import { ArtworkListApiResponseProps, ArtworkListProps } from '../api/types';
 
-function Section({ children, title }: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+const EmptyText = (): JSX.Element => {
+  return <Text> No Artworks to show! </Text>;
+};
+
+const Separator = (): JSX.Element => <View style={styles.separator} />;
 
 function Home(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const [artworksResponse, setArtworksResponse] =
+    useState<ArtworkListApiResponseProps>({} as ArtworkListApiResponseProps);
+  const [artworksData, setArtworksData] = useState<ArtworkListProps>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const refreshData = async () => {
+    setRefreshing(true);
+    try {
+      const data = await getArtworksApi();
+      setArtworksData(data?.data);
+      setArtworksResponse(data);
+    } catch (error) {
+      setArtworksData([]);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
+  const getDataRequest = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getArtworksApi();
+      setArtworksData(data?.data);
+      setArtworksResponse(data);
+    } catch (error) {
+      setArtworksData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getMoreDataRequest = useCallback(async () => {
+    const {
+      pagination: { total_pages, current_page },
+    } = artworksResponse;
+
+    if (loading || loadingMore || total_pages === current_page) {
+      return;
+    }
+
+    const newPage = current_page + 1;
+    try {
+      setLoadingMore(true);
+      const data = await getArtworksApi(newPage);
+      setArtworksData([...artworksData, ...data?.data]);
+      setArtworksResponse(data);
+    } catch (error) {
+      setArtworksData([]);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [artworksData, artworksResponse, loading, loadingMore]);
+
+  const renderFooter = () => {
+    if (loadingMore && !loading) {
+      return <ActivityIndicator size="large" />;
+    }
+  };
+
+  useEffect(() => {
+    getDataRequest();
+  }, [getDataRequest]);
+
+  if (loading) {
+    return (
+      <View style={styles.fullWrapper}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <FlatList
+      data={artworksData}
+      renderItem={props => (
+        <ArtworkItem
+          {...props}
+          imageBaseUrl={artworksResponse?.config?.iiif_url}
+        />
+      )}
+      onRefresh={refreshData}
+      refreshing={refreshing}
+      ListEmptyComponent={<EmptyText />}
+      ItemSeparatorComponent={() => <Separator />}
+      // ListHeaderComponent={<TextInput placeholder='enter an artwork you want to search'/>}
+      ListFooterComponent={renderFooter}
+      onEndReached={getMoreDataRequest}
+      onEndReachedThreshold={0.1}
+      contentContainerStyle={styles.listContainer}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  listContainer: {
+    padding: 16,
   },
   sectionTitle: {
     fontSize: 24,
@@ -104,6 +128,15 @@ const styles = StyleSheet.create({
   },
   highlight: {
     fontWeight: '700',
+  },
+  fullWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'white',
+  },
+  separator: {
+    borderWidth: 1,
+    marginBottom: 12,
   },
 });
 

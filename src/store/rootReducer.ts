@@ -1,18 +1,24 @@
 import { combineReducers, createSlice } from '@reduxjs/toolkit';
 
-const slice = createSlice({
-  name: 'slice',
-  initialState: 0,
+const favoritesArtwork = createSlice({
+  name: 'favoritesArtwork',
+  initialState: [],
   reducers: {
-    increment: (state: number, action: { payload: number }) =>
-      state + action.payload,
+    savedAsFavorite: (state: Array<string>, action: { payload: string }) => {
+      const checkArtIndex = state.findIndex(art => art === action.payload);
+      if (checkArtIndex !== -1) {
+        state = state.slice(checkArtIndex, 1);
+      } else {
+        state.push(action.payload);
+      }
+    },
   },
 });
-//   // now available:
-//   slice.actions.increment(2)
-//   // also available:
-//   slice.caseReducers.increment(0, { type: 'increment', payload: 5 })
 
-const rootReducer = combineReducers({ slice: slice.reducer });
+// export { saveArtwork: favoritesArtwork.actions.savedAsFavorite, }
+
+const rootReducer = combineReducers({
+  favoritesArtwork: favoritesArtwork.reducer,
+});
 
 export default rootReducer;
