@@ -8,8 +8,12 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 import { ArtworkItemApiProps } from '../../api/types';
+import { HOME_DETAIL_ROUTE } from '../../navigators/routes';
+import { useAppDispatch, useAppSelector } from '../../hooks/useRedux';
+import { savedAsFavorite, removeAsFavorite } from '../../store/favoriteArtwork';
 
 type ArtworkItemProps = PropsWithChildren<{
   item: ArtworkItemApiProps;
@@ -21,9 +25,25 @@ function ArtworkItem({
   imageBaseUrl,
 }: ArtworkItemProps): JSX.Element | null {
   const imgUrl = `${imageBaseUrl}/${item.image_id}/full/200,/0/default.jpg`;
+  const navigation = useNavigation() as {
+    navigate: (route: string, params: { id: number }) => void;
+  };
+  const favoritesArts = useAppSelector(state => state.favoritesArtwork);
+  const dispatch = useAppDispatch();
 
-  const onArtworkPress = () => null;
-  const saveAsFavorite = () => null;
+  const onArtworkPress = () => {
+    const params = { id: item.id };
+
+    return navigation.navigate(HOME_DETAIL_ROUTE, params);
+  };
+
+  const saveAsFavorite = () => {
+    return isFavorite
+      ? dispatch(removeAsFavorite(item.id))
+      : dispatch(savedAsFavorite(item.id));
+  };
+
+  const isFavorite = favoritesArts.some(art => art === item.id);
 
   return (
     <TouchableOpacity onPress={onArtworkPress}>
@@ -41,7 +61,10 @@ function ArtworkItem({
           style={styles.thumbnail}
         />
       </View>
-      <Button title="Mark as Favorite" onPress={saveAsFavorite} />
+      <Button
+        title={isFavorite ? 'Remove as Favorite' : 'Mark as Favorite'}
+        onPress={saveAsFavorite}
+      />
     </TouchableOpacity>
   );
 }
