@@ -1,110 +1,107 @@
-import React from 'react';
-import type { PropsWithChildren } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
+  View,
   StyleSheet,
   Text,
-  useColorScheme,
-  View,
+  Image,
+  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import { useRoute } from '@react-navigation/native';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+import { getArtworkDetailsApi } from '../api';
+import { ArtworkItemApiProps, ArtworkListApiResponseProps } from '../api/types';
 
-function Section({ children, title }: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+function ArtworkDetail(): JSX.Element | null {
+  const [artworksData, setArtworksData] = useState<ArtworkItemApiProps>(
+    {} as ArtworkItemApiProps,
   );
-}
+  const [artworksResponse, setArtworksResponse] =
+    useState<ArtworkListApiResponseProps>({} as ArtworkListApiResponseProps);
+  const [loading, setLoading] = useState(true);
+  const { id: artworkID } = useRoute()?.params as { id: string };
 
-function Home(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const imgUrl = `${artworksResponse?.config?.iiif_url}/${artworksData.image_id}/full/1686,/0/default.png`;
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  const getDataRequest = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getArtworkDetailsApi(artworkID);
+      setArtworksData(data?.data);
+      setArtworksResponse(data);
+    } catch (error) {
+      setArtworksData({} as ArtworkItemApiProps);
+    } finally {
+      setLoading(false);
+    }
+  }, [artworkID]);
+
+  useEffect(() => {
+    getDataRequest();
+  }, [getDataRequest]);
+
+  if (loading) {
+    return (
+      <View style={styles.fullWrapper}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.sectionTitle}>{artworksData.title}</Text>
+      <Image
+        source={{
+          uri: imgUrl,
+        }}
+        style={styles.artImage}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <Text style={styles.sectionDescription}>
+        By: {artworksData.artist_title}
+      </Text>
+      <Text style={styles.body}>{artworksData.publication_history}</Text>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 16,
   },
   sectionTitle: {
     fontSize: 24,
     fontWeight: '600',
+    marginBottom: 8,
   },
   sectionDescription: {
     marginTop: 8,
     fontSize: 18,
     fontWeight: '400',
+    marginBottom: 8,
+    alignSelf: 'flex-end',
   },
-  highlight: {
-    fontWeight: '700',
+  cardContainer: {
+    flexDirection: 'row',
+    flex: 1,
+  },
+  body: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: '400',
+    marginBottom: 8,
+  },
+  fullWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'white',
+  },
+  artImage: {
+    width: '100%',
+    height: 350,
   },
 });
 
-export default Home;
+export default ArtworkDetail;

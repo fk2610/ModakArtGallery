@@ -8,6 +8,7 @@ export interface ArtworkItemApiProps {
   image_id: string;
   exhibition_history: string;
   provenance_text: string;
+  publication_history: string;
 }
 
 export type ArtworkListProps = Array<ArtworkItemApiProps>;
