@@ -3,40 +3,9 @@
 
 [Setting up the development environment](https://reactnative.dev/docs/environment-setup)
 
-### Environment Configuration
-
-#### Step 1 - Firebase Config
-
-You should ask for Firebase config files to your mobile team. These files should be placed under `src/config/firebase/development` and `src/config/firebase/production`.
-
-Example of the expected file structure:
-
-```js
-.
-├── src
-│   ├── config
-│            ├── firebase
-│                       ├── development
-│                                     ├── google-services.json
-│                                     ├── GoogleService-Info.plist
-│                       ├── production
-│                                     ├── google-services.json
-│                                     ├── GoogleService-Info.plist
-```
-
-Finally, run the script `firebase-dev` or `firebase-prod` depending on your environment, which will link the necessary files into the project. Rebuilding the project may be necessary.
-
-You may need to give copy permissions for the script to run: `chmod +x ./src/scripts/firebaseSwitch.sh`.
-
-Example:
-
-```
-yarn firebase-dev
-```
-
 ### Installation
 
-After having installed all the required packages mentioned on `Requirements` section and done all the `Environment Configuration`
+After having installed all the required packages and done all the `Environment Configuration`
 
 - Run `yarn` or `yarn install` to install the dependencies
 
