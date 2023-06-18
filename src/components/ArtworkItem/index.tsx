@@ -12,8 +12,9 @@ import { useNavigation } from '@react-navigation/native';
 
 import { ArtworkItemApiProps } from '../../api/types';
 import { HOME_DETAIL_ROUTE } from '../../navigators/routes';
-import { useAppDispatch, useAppSelector } from '../../hooks/useRedux';
 import { savedAsFavorite, removeAsFavorite } from '../../store/favoriteArtwork';
+import { useAppDispatch, useAppSelector } from '../../hooks/useRedux';
+import useDispatchPushNotification from '../../hooks/useDispatchPushNotification';
 
 type ArtworkItemProps = PropsWithChildren<{
   item: ArtworkItemApiProps;
@@ -30,6 +31,8 @@ function ArtworkItem({
   };
   const favoritesArts = useAppSelector(state => state.favoritesArtwork);
   const dispatch = useAppDispatch();
+  const { showLocalPushNotificationSaved, showLocalPushNotificationRemoved } =
+    useDispatchPushNotification();
 
   const onArtworkPress = () => {
     const params = { id: item.id };
@@ -38,9 +41,13 @@ function ArtworkItem({
   };
 
   const saveAsFavorite = () => {
-    return isFavorite
-      ? dispatch(removeAsFavorite(item.id))
-      : dispatch(savedAsFavorite(item.id));
+    if (isFavorite) {
+      showLocalPushNotificationRemoved(item.title);
+      dispatch(removeAsFavorite(item.id));
+    } else {
+      showLocalPushNotificationSaved(item.title);
+      dispatch(savedAsFavorite(item.id));
+    }
   };
 
   const isFavorite = favoritesArts.some(art => art === item.id);

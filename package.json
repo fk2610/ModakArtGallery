@@ -11,6 +11,7 @@
     "install:deps": "watchman watch-del-all && rm -rf node_modules && rm -rf /tmp/metro-bundler-cache-* && rm -rf /tmp/haste-map-react-native-packager-* && yarn && npx pod-install ios"
   },
   "dependencies": {
+    "@notifee/react-native": "^7.7.1",
     "@react-native-async-storage/async-storage": "^1.18.2",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
